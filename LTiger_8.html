@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Tính Toán Lệnh LTiger Pro</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        
+        /* Tùy chỉnh thanh cuộn cho bảng */
+        .excel-table-container::-webkit-scrollbar {
+            height: 10px;
+            width: 10px;
+        }
+        .excel-table-container::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-left: 1px solid #d1d5db;
+        }
+        .excel-table-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border: 1px solid #f1f1f1;
+        }
+        .excel-table-container::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+
+        /* Định dạng các ô input giống hệt cell Excel */
+        .excel-input {
+            width: 100%;
+            height: 100%;
+            padding: 4px 8px;
+            border: none;
+            background-color: #ffffff;
+            outline: none;
+            font-family: inherit;
+        }
+        .excel-input:focus {
+            box-shadow: inset 0 0 0 2px #ea580c; 
+            background-color: #fff;
+        }
+        
+        /* Loại bỏ mũi tên tăng giảm số */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="p-2 md:p-4 min-h-screen flex flex-col text-sm relative">
+
+    <!-- Header Style Excel -->
+    <header class="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between bg-white border border-slate-400 p-3 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-br from-orange-500 to-orange-700 rounded w-11 h-11 flex items-center justify-center shadow-sm border border-orange-800">
+                <img src="https://api.iconify.design/game-icons/tiger-head.svg?color=white" alt="LTiger Logo" class="w-7 h-7 drop-shadow">
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-orange-600 leading-tight tracking-tight">Hệ thống tính toán lệnh LTiger</h1>
+                <p class="text-xs text-slate-600 mt-0.5 italic">"Đừng để bản thân thua lỗ quá nhiều trước khi thành công"</p>
+                
+                <!-- Bổ sung Đồng Hồ Điện Tử Kế Bên Ngày Giao Dịch -->
+                <div class="flex items-center gap-2 mt-1">
+                    <p class="text-xs text-blue-700 font-semibold" id="currentDateDisplay">Ngày giao dịch: -- - -- - ----</p>
+                    <div class="h-3 w-px bg-slate-400"></div>
+                    <div class="text-[11px] text-blue-800 font-bold font-mono bg-blue-100/50 px-1.5 py-0.5 rounded border border-blue-200 flex items-center gap-1 shadow-sm" title="Giờ hiện tại">
+                        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span id="currentTimeDisplay">--:--:--</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <button id="btnReset" title="Khôi phục số liệu mặc định" class="mt-2 md:mt-0 bg-[#f4f6f8] hover:bg-[#e2e6ea] border border-slate-300 text-[#004b8b] px-4 py-1.5 text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            Làm Mới (F9)
+        </button>
+    </header>
+
+    <!-- Content: Inputs + Optimization + Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        
+        <!-- BLOCK 1: THÔNG SỐ CƠ BẢN -->
+        <div class="bg-white border border-slate-400 shadow-sm flex flex-col">
+            <div class="bg-slate-200 border-b border-slate-400 px-3 py-1.5 font-semibold text-slate-800 text-sm">
+                1. THÔNG SỐ LỆNH
+            </div>
+            <div class="grid grid-cols-[130px_1fr] flex-grow">
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Hướng GD</div>
+                <div class="border-b border-slate-300">
+                    <select id="direction" class="excel-input cursor-pointer font-semibold text-blue-700">
+                        <option value="buy">Mua (Buy)</option>
+                        <option value="sell">Bán (Sell)</option>
+                    </select>
+                </div>
+                
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Giá Mở (L1)</div>
+                <div class="border-b border-slate-300"><input type="number" id="entry1" value="5000" step="0.01" class="excel-input text-right font-mono"></div>
+
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Lot Lệnh 1</div>
+                <div class="border-b border-slate-300"><input type="number" id="initialLot" value="0.01" step="0.01" class="excel-input text-right font-mono text-red-700 font-semibold transition-all duration-300"></div>
+
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Hệ Số Lot</div>
+                <div class="border-b border-slate-300"><input type="number" id="lotMultiplier" value="1.7" step="0.1" class="excel-input text-right font-mono transition-all duration-300"></div>
+
+                <div class="px-3 py-1.5 border-r border-slate-300 bg-slate-50 flex items-center">Số Lệnh (Max)</div>
+                <div class=""><input type="number" id="maxOrders" value="12" step="1" class="excel-input text-right font-mono transition-all duration-300"></div>
+            </div>
+        </div>
+
+        <!-- BLOCK 2: QUÃNG GIÁ & KÝ QUỸ -->
+        <div class="bg-white border border-slate-400 shadow-sm flex flex-col">
+            <div class="bg-slate-200 border-b border-slate-400 px-3 py-1.5 font-semibold text-slate-800 text-sm">
+                2. QUÃNG GIÁ & HỢP ĐỒNG
+            </div>
+            <div class="grid grid-cols-[130px_1fr] flex-grow">
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Quãng L1-L2</div>
+                <div class="border-b border-slate-300"><input type="number" id="step1" value="6" step="0.1" class="excel-input text-right font-mono transition-all duration-300"></div>
+
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Quãng L2 trở đi</div>
+                <div class="border-b border-slate-300"><input type="number" id="step2" value="1" step="0.1" class="excel-input text-right font-mono transition-all duration-300"></div>
+
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Quãng TP</div>
+                <div class="border-b border-slate-300"><input type="number" id="tpStep" value="2" step="0.1" class="excel-input text-right font-mono text-green-700 font-semibold transition-all duration-300"></div>
+
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center">Contract Size</div>
+                <div class="border-b border-slate-300"><input type="number" id="contractSize" value="100" step="1" class="excel-input text-right font-mono bg-yellow-50"></div>
+
+                <div class="px-3 py-1.5 border-r border-slate-300 bg-slate-50 flex items-center font-bold text-cyan-800">Đòn Bẩy (1:X)</div>
+                <div class=""><input type="number" id="leverage" value="2000" step="1" class="excel-input text-right font-mono font-bold text-cyan-900 bg-cyan-100"></div>
+            </div>
+        </div>
+
+        <!-- BLOCK 3: TÌM THÔNG SỐ TỐI ƯU (NEW) -->
+        <div class="bg-white border-2 border-indigo-400 shadow-sm flex flex-col relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-100 rounded-bl-full -z-10"></div>
+            <div class="bg-indigo-100/80 border-b border-indigo-300 px-3 py-1.5 font-bold text-indigo-900 text-sm flex justify-between items-center">
+                <span>3. KIỂM TRA THÔNG SỐ</span>
+            </div>
+            <div class="grid grid-cols-[130px_1fr] flex-grow">
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center font-medium">Vốn Tối Đa ($)</div>
+                <div class="border-b border-slate-300"><input type="number" id="optMaxCapital" value="2000" step="100" class="excel-input text-right font-mono text-indigo-700 font-bold bg-indigo-50/30"></div>
+
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center font-medium">Biên Độ Giá Đi</div>
+                <div class="border-b border-slate-300"><input type="number" id="optPriceRange" value="15" step="1" class="excel-input text-right font-mono text-indigo-700 font-bold bg-indigo-50/30"></div>
+
+                <div class="px-3 py-1.5 border-b border-r border-slate-300 bg-slate-50 flex items-center font-medium">Giá Phục Hồi</div>
+                <div class="border-b border-slate-300"><input type="number" id="optRecovery" value="2" step="0.5" class="excel-input text-right font-mono text-indigo-700 font-bold bg-indigo-50/30"></div>
+                
+                <div class="col-span-2 p-2 bg-white flex flex-col justify-center items-center gap-2">
+                    <!-- Nút Tối ưu Cân bằng -->
+                    <button onclick="runOptimization(event, 'balance')" class="opt-btn w-full bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white font-bold py-1.5 px-4 rounded shadow transition-all active:scale-95 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        Tự Động Tính Toán (Cân Bằng)
+                    </button>
+                    <!-- Bộ 3 Nút Tối ưu Chuyên sâu -->
+                    <div class="grid grid-cols-3 w-full gap-2">
+                        <button onclick="runOptimization(event, 'lotMin')" class="opt-btn w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold py-1 px-1 rounded shadow-sm transition-all active:scale-95 text-xs text-center flex flex-col items-center">
+                            <span class="font-bold text-orange-600">Lot (Min)</span>
+                            <span class="text-[10px] text-slate-500 font-normal leading-tight mt-0.5">Ép nhỏ Hệ Số Lot</span>
+                        </button>
+                        <button onclick="runOptimization(event, 'lenhMax')" class="opt-btn w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold py-1 px-1 rounded shadow-sm transition-all active:scale-95 text-xs text-center flex flex-col items-center">
+                            <span class="font-bold text-blue-600">Lệnh (Max)</span>
+                            <span class="text-[10px] text-slate-500 font-normal leading-tight mt-0.5">Kéo giãn Số Lệnh</span>
+                        </button>
+                        <button onclick="runOptimization(event, 'tpMin')" class="opt-btn w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold py-1 px-1 rounded shadow-sm transition-all active:scale-95 text-xs text-center flex flex-col items-center">
+                            <span class="font-bold text-green-600">TP (Min)</span>
+                            <span class="text-[10px] text-slate-500 font-normal leading-tight mt-0.5">Rút ngắn Quãng TP</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLOCK 4: SUMMARY OVERVIEW -->
+        <div class="bg-white border border-slate-400 shadow-sm flex flex-col">
+            <div class="bg-[#ffe699] border-b border-slate-400 px-3 py-1.5 font-bold text-slate-800 text-sm text-center uppercase tracking-wider">
+                THỐNG KÊ RỦI RO (MAX)
+            </div>
+            <div class="grid grid-cols-1 flex-grow">
+                <div class="flex flex-col justify-center items-center border-b border-slate-300 p-1.5 bg-red-50">
+                    <span class="text-xs font-semibold text-slate-600">LỖ TẠM TÍNH MAX (DRAWDOWN)</span>
+                    <span id="cardMaxDrawdown" class="text-lg font-bold font-mono text-red-600">$0.00</span>
+                </div>
+
+                <div class="flex flex-col justify-center items-center border-b border-slate-300 p-1.5 bg-blue-50">
+                    <span class="text-xs font-semibold text-slate-600">TỔNG VỐN YÊU CẦU <span id="lblLeverageDisplay" class="text-cyan-700 font-bold ml-1">(1:2000)</span></span>
+                    <span id="cardTotalCapital" class="text-xl font-bold font-mono text-blue-800">$0.00</span>
+                </div>
+                <div class="flex flex-row justify-between items-center px-3 py-2 bg-slate-100 border-b border-slate-300">
+                    <span class="text-xs font-semibold text-slate-700">TỔNG KHỐI LƯỢNG (LOT):</span>
+                    <span id="cardTotalLot" class="text-base font-bold font-mono text-slate-900">0.00</span>
+                </div>
+                <div class="flex flex-row justify-between items-center px-3 py-2 bg-slate-100">
+                    <span class="text-xs font-semibold text-slate-700">TỔNG BIÊN ĐỘ ĐÃ ĐI:</span>
+                    <span id="cardTotalPriceRange" class="text-base font-bold font-mono text-slate-900">0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table (Excel Style) -->
+    <div class="bg-white border border-slate-400 shadow-sm flex-grow flex flex-col overflow-hidden">
+        <div class="excel-table-container overflow-x-auto overflow-y-auto flex-grow" style="max-height: calc(100vh - 280px);">
+            <table class="w-full text-sm text-left border-collapse whitespace-nowrap">
+                <thead class="sticky top-0 z-10">
+                    <tr class="bg-slate-300 text-slate-600 text-xs text-center border-b border-slate-400 select-none">
+                        <th class="border-r border-slate-400 w-8"></th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">A</th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">B</th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">C</th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">D</th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">E</th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">F</th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">G</th>
+                        <th class="border-r border-slate-400 font-normal py-0.5">H</th>
+                        <th class="font-normal py-0.5">I</th>
+                    </tr>
+                    <tr class="bg-slate-200 text-slate-800 shadow-sm">
+                        <th class="border-r border-b border-slate-400 bg-slate-300 text-center w-8 select-none"></th>
+                        <th class="px-3 py-2 font-bold text-center border-r border-b border-slate-400 w-24">Tên Lệnh</th>
+                        <th class="px-3 py-2 font-bold text-right border-r border-b border-slate-400 text-blue-800">Giá Khớp (Entry)</th>
+                        <th class="px-3 py-2 font-bold text-right border-r border-b border-slate-400">Lot</th>
+                        <th class="px-3 py-2 font-bold text-right border-r border-b border-slate-400">Tổng Lot</th>
+                        <th class="px-3 py-2 font-bold text-right border-r border-b border-slate-400 text-red-700 bg-red-50">Lỗ Tạm Tính ($)</th>
+                        <th class="px-3 py-2 font-bold text-right border-r border-b border-slate-400 text-slate-600">Ký Quỹ ($)</th>
+                        <th class="px-3 py-2 font-bold text-right border-r border-b border-slate-400 text-blue-700 bg-blue-50">Tổng Vốn Yêu Cầu ($)</th>
+                        <th class="px-3 py-2 font-bold text-right border-r border-b border-slate-400">Giá Cài TP</th>
+                        <th class="px-3 py-2 font-bold text-right border-b border-slate-400 text-green-700 bg-green-50">Lợi Nhuận Tại TP ($)</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody" class="bg-white">
+                    <!-- JS sẽ render dữ liệu vào đây -->
+                </tbody>
+            </table>
+        </div>
+        <!-- Status Bar -->
+        <div class="bg-slate-200 border-t border-slate-400 px-3 py-1 flex justify-between text-xs text-slate-600 select-none">
+            <span id="statusBarMsg" class="transition-colors duration-300">Ready</span>
+            <span>Tính toán hoàn tự động. Tích hợp AI Định Lượng Đa Chiều.</span>
+        </div>
+    </div>
+
+    <!-- UI Modal Thông Báo Custom (Thay thế cho alert mặc định) -->
+    <div id="customAlertModal" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded shadow-2xl p-5 max-w-sm w-full mx-4 border-t-4 border-red-600 transform scale-95 transition-transform duration-300">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="bg-red-100 p-2 rounded-full text-red-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Cảnh Báo Quản Trị Rủi Ro</h3>
+            </div>
+            <p class="text-sm text-slate-600 mb-5 leading-relaxed" id="customAlertMsg"></p>
+            <div class="flex justify-end">
+                <button onclick="closeCustomAlert()" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-5 rounded shadow-sm transition-colors text-sm">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        const formatMoney = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        const formatLot = (lot) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(lot);
+        const formatPrice = (price) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(price);
+        const roundLot = (value) => Math.round(value * 100) / 100;
+
+        // Hàm Hiển Thị/Đóng Custom Alert
+        function showCustomAlert(msg) {
+            const modal = document.getElementById('customAlertModal');
+            document.getElementById('customAlertMsg').innerHTML = msg;
+            modal.classList.remove('hidden');
+            void modal.offsetWidth; // Trigger reflow để chạy hiệu ứng transition
+            modal.classList.remove('opacity-0');
+            modal.querySelector('div').classList.remove('scale-95');
+        }
+
+        function closeCustomAlert() {
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300); // Chờ hiệu ứng css tắt hẳn rồi mới display:none
+        }
+
+        // --- HÀM KHỞI ĐỘNG ĐỒNG HỒ & NGÀY THÁNG ---
+        function startClock() {
+            function tick() {
+                const now = new Date();
+                
+                // Cập nhật Giờ (Thêm số 0 vào trước nếu < 10)
+                const timeElement = document.getElementById('currentTimeDisplay');
+                if (timeElement) {
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    timeElement.innerText = `${hours}:${minutes}:${seconds}`;
+                }
+
+                // Cập nhật Ngày tháng
+                const dateElement = document.getElementById('currentDateDisplay');
+                if (dateElement) {
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const year = now.getFullYear();
+                    dateElement.innerText = `Ngày giao dịch: ${day} - ${month} - ${year}`;
+                }
+            }
+            
+            tick(); // Chạy ngay lập tức lần đầu
+            setInterval(tick, 1000); // Lặp lại cập nhật mỗi 1 giây (1000ms)
+        }
+
+        function highlightElement(id) {
+            const el = document.getElementById(id);
+            el.classList.add('bg-indigo-100');
+            setTimeout(() => el.classList.remove('bg-indigo-100'), 800);
+        }
+
+        function resetToDefaults() {
+            document.getElementById('direction').value = 'buy';
+            document.getElementById('entry1').value = '5000';
+            document.getElementById('initialLot').value = '0.01';
+            document.getElementById('lotMultiplier').value = '1.7';
+            document.getElementById('maxOrders').value = '12';
+            document.getElementById('step1').value = '6';
+            document.getElementById('step2').value = '1';
+            document.getElementById('tpStep').value = '2';
+            document.getElementById('leverage').value = '2000';
+            
+            const statusBar = document.getElementById('statusBarMsg');
+            statusBar.innerText = "Đã khôi phục số liệu gốc";
+            statusBar.classList.add('text-blue-700', 'font-bold');
+            setTimeout(() => {
+                statusBar.innerText = "Ready";
+                statusBar.classList.remove('text-blue-700', 'font-bold');
+            }, 3000);
+
+            calculateDCA();
+        }
+
+        function calculateDCA() {
+            const direction = document.getElementById('direction').value;
+            const entry1 = parseFloat(document.getElementById('entry1').value);
+            const initialLot = parseFloat(document.getElementById('initialLot').value);
+            const lotMultiplier = parseFloat(document.getElementById('lotMultiplier').value);
+            const maxOrders = parseInt(document.getElementById('maxOrders').value);
+            const contractSize = parseFloat(document.getElementById('contractSize').value);
+            const step1 = parseFloat(document.getElementById('step1').value);
+            const step2 = parseFloat(document.getElementById('step2').value);
+            const tpStep = parseFloat(document.getElementById('tpStep').value);
+            const leverage = parseFloat(document.getElementById('leverage').value);
+
+            if (isNaN(entry1) || isNaN(initialLot) || isNaN(maxOrders) || isNaN(leverage) || leverage <= 0) return;
+
+            // Cập nhật nhãn hiển thị tỷ lệ đòn bẩy trên UI thẻ TỔNG VỐN YÊU CẦU
+            document.getElementById('lblLeverageDisplay').innerText = `(1:${leverage})`;
+
+            let results = [];
+            let activeOrders = []; 
+            let totalLot = 0;
+            let currentEntry = entry1;
+            let maxRequiredCapital = 0;
+            let maxDrawdownTotal = 0;
+
+            for (let i = 1; i <= maxOrders; i++) {
+                let currentLot = i === 1 ? initialLot : roundLot(results[i - 2].lot * lotMultiplier);
+                totalLot += currentLot;
+
+                if (i > 1) {
+                    let step = (i === 2) ? step1 : step2;
+                    currentEntry = direction === 'buy' ? currentEntry - step : currentEntry + step;
+                }
+
+                activeOrders.push({ entry: currentEntry, lot: currentLot });
+
+                let drawdown = 0;
+                let currentTotalMargin = 0; // Tính tổng ký quỹ động của các lệnh đang mở
+
+                activeOrders.forEach(order => {
+                    // Tính Drawdown
+                    let pnl = direction === 'buy' 
+                        ? (currentEntry - order.entry) * order.lot * contractSize
+                        : (order.entry - currentEntry) * order.lot * contractSize;
+                    if (pnl < 0) drawdown += pnl; 
+
+                    // Tính Margin cho từng lệnh: (Lot * ContractSize * Entry) / Leverage
+                    currentTotalMargin += (order.lot * contractSize * order.entry) / leverage;
+                });
+
+                let margin = currentTotalMargin;
+                let requiredCapital = margin + Math.abs(drawdown);
+
+                let tpPrice = direction === 'buy' ? currentEntry + tpStep : currentEntry - tpStep; 
+
+                let tpProfit = 0;
+                activeOrders.forEach(order => {
+                    tpProfit += direction === 'buy'
+                        ? (tpPrice - order.entry) * order.lot * contractSize
+                        : (order.entry - tpPrice) * order.lot * contractSize;
+                });
+
+                if (requiredCapital > maxRequiredCapital) maxRequiredCapital = requiredCapital;
+                if (Math.abs(drawdown) > maxDrawdownTotal) maxDrawdownTotal = Math.abs(drawdown);
+
+                results.push({ step: i, entry: currentEntry, lot: currentLot, totalLot: totalLot, drawdown: drawdown, margin: margin, requiredCapital: requiredCapital, tpPrice: tpPrice, tpProfit: tpProfit });
+            }
+
+            let totalPriceRange = Math.abs(entry1 - currentEntry);
+
+            renderTable(results);
+            
+            document.getElementById('cardMaxDrawdown').innerText = formatMoney(maxDrawdownTotal);
+            document.getElementById('cardTotalCapital').innerText = formatMoney(maxRequiredCapital);
+            document.getElementById('cardTotalLot').innerText = formatLot(totalLot);
+            document.getElementById('cardTotalPriceRange').innerText = formatPrice(totalPriceRange);
+        }
+
+        function renderTable(results) {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = ''; 
+
+            results.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-blue-50 transition-colors border-b border-slate-300';
+                const tpColor = row.tpProfit >= 0 ? 'text-green-700' : 'text-red-700';
+
+                tr.innerHTML = `
+                    <td class="bg-slate-200 text-slate-500 text-center text-xs font-semibold border-r border-slate-400 select-none">${index + 1}</td>
+                    <td class="px-3 py-1.5 text-center font-medium text-slate-800 border-r border-slate-300">Lệnh ${row.step}</td>
+                    <td class="px-3 py-1.5 text-right font-mono font-bold text-blue-800 border-r border-slate-300">${formatPrice(row.entry)}</td>
+                    <td class="px-3 py-1.5 text-right font-mono border-r border-slate-300">${formatLot(row.lot)}</td>
+                    <td class="px-3 py-1.5 text-right font-mono font-medium text-slate-800 border-r border-slate-300">${formatLot(row.totalLot)}</td>
+                    <td class="px-3 py-1.5 text-right font-mono text-red-600 bg-red-50/30 border-r border-slate-300">${formatMoney(row.drawdown)}</td>
+                    <td class="px-3 py-1.5 text-right font-mono text-slate-600 border-r border-slate-300">${formatMoney(row.margin)}</td>
+                    <td class="px-3 py-1.5 text-right font-mono font-bold text-blue-800 bg-blue-50/50 border-r border-slate-300">${formatMoney(row.requiredCapital)}</td>
+                    <td class="px-3 py-1.5 text-right font-mono border-r border-slate-300 bg-slate-50">${formatPrice(row.tpPrice)}</td>
+                    <td class="px-3 py-1.5 text-right font-mono font-bold ${tpColor} bg-green-50/30">${formatMoney(row.tpProfit)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- THUẬT TOÁN TỐI ƯU HÓA ĐA CHIỀU (QUANT ALGORITHM) ---
+        function runOptimization(event, mode) {
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            
+            // Khóa tất cả các nút
+            const allBtns = document.querySelectorAll('.opt-btn');
+            allBtns.forEach(b => b.classList.add('opacity-50', 'pointer-events-none'));
+            
+            // Đặt trạng thái Loading cho nút được bấm
+            btn.innerHTML = '<svg class="animate-spin h-4 w-4 text-indigo-500 inline mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            
+            setTimeout(() => {
+                const targetCapital = parseFloat(document.getElementById('optMaxCapital').value);
+                const targetRange = parseFloat(document.getElementById('optPriceRange').value);
+                const targetRecovery = parseFloat(document.getElementById('optRecovery').value);
+                const contractSize = parseFloat(document.getElementById('contractSize').value);
+                const leverage = parseFloat(document.getElementById('leverage').value);
+                const entry1 = parseFloat(document.getElementById('entry1').value);
+                const direction = document.getElementById('direction').value;
+
+                if (isNaN(targetCapital) || isNaN(targetRange) || isNaN(targetRecovery) || isNaN(leverage) || leverage <= 0) {
+                    showCustomAlert("Vui lòng nhập đầy đủ Vốn, Biên độ, Giá hồi và Đòn bẩy!");
+                    restoreButtons();
+                    return;
+                }
+
+                let validConfigs = [];
+
+                // Quét cạn số lượng lệnh từ 4 đến 15 lệnh
+                for (let maxOrd = 4; maxOrd <= 15; maxOrd++) {
+                    let baseStep = targetRange / (maxOrd - 1);
+                    // Sinh ra các kịch bản step thực tế 
+                    let stepOptions = [
+                        Math.floor(baseStep * 2) / 2, 
+                        Math.ceil(baseStep * 2) / 2,  
+                        Math.ceil(baseStep)
+                    ];
+                    stepOptions = [...new Set(stepOptions)].filter(s => s > 0);
+
+                    stepOptions.forEach(step => {
+                        if ((maxOrd - 1) * step < targetRange) return;
+
+                        // Quét Lot khởi điểm
+                        for (let initLot = 0.01; initLot <= 0.05; initLot += 0.01) {
+                            // Quét Multiplier
+                            for (let mult = 1.2; mult <= 4.0; mult += 0.1) {
+                                
+                                let totalLot = initLot;
+                                let lots = [initLot];
+                                for (let i = 2; i <= maxOrd; i++) {
+                                    let nextLot = Math.round((lots[i - 2] * mult) * 100) / 100;
+                                    lots.push(nextLot);
+                                    totalLot += nextLot;
+                                }
+
+                                let drawdown = 0;
+                                let weightedDistance = 0;
+                                let totalMargin = 0;
+                                let simulatedEntry = entry1;
+                                
+                                for (let i = 1; i <= maxOrd; i++) {
+                                    let lot_i = lots[i - 1];
+                                    let distanceFromLast = (maxOrd - i) * step; 
+                                    drawdown += distanceFromLast * lot_i * contractSize; 
+                                    weightedDistance += distanceFromLast * lot_i * contractSize;
+
+                                    // Mô phỏng lại Entry để tính Margin chính xác
+                                    if (i > 1) {
+                                        simulatedEntry = direction === 'buy' ? simulatedEntry - step : simulatedEntry + step;
+                                    }
+                                    totalMargin += (lot_i * contractSize * simulatedEntry) / leverage;
+                                }
+
+                                let requiredCapital = totalMargin + drawdown;
+
+                                // Tính toán Quãng TP Min cần thiết để Lợi Nhuận >= 1 USD
+                                // Công thức: TP * TổngLot * Contract - KhoảngCáchCóTrọngSố >= 1
+                                let minTpNeeded = (1 + weightedDistance) / (totalLot * contractSize);
+                                minTpNeeded = Math.ceil(minTpNeeded * 10) / 10; // Làm tròn lên 1 chữ số thập phân
+
+                                // Nếu ở Mode TP(Min), ta dùng minTpNeeded. Ở các mode khác, dùng thẳng targetRecovery
+                                let actualTpStep = (mode === 'tpMin') ? minTpNeeded : targetRecovery;
+
+                                // Nếu yêu cầu TP Min lớn hơn cả Giá Phục Hồi cho phép, loại bỏ cấu hình
+                                if (actualTpStep > targetRecovery) continue;
+
+                                let tpProfit = 0;
+                                for (let i = 1; i <= maxOrd; i++) {
+                                    let lot_i = lots[i - 1];
+                                    let distanceFromLast = (maxOrd - i) * step;
+                                    tpProfit += (actualTpStep - distanceFromLast) * lot_i * contractSize;
+                                }
+
+                                // Điều kiện sống còn: Vốn <= Max, Lời > 0
+                                if (requiredCapital <= targetCapital && tpProfit >= 1) {
+                                    validConfigs.push({
+                                        initialLot: Math.round(initLot*100)/100,
+                                        lotMultiplier: Math.round(mult * 10) / 10,
+                                        maxOrders: maxOrd,
+                                        step: step,
+                                        tpStep: actualTpStep,
+                                        reqCap: requiredCapital,
+                                        profit: tpProfit,
+                                        totalLot: totalLot
+                                    });
+                                }
+                            }
+                        }
+                    });
+                }
+
+                if (validConfigs.length > 0) {
+                    // Sắp xếp (Sort) để tìm ra cấu hình theo chiến lược yêu cầu
+                    validConfigs.sort((a, b) => {
+                        if (mode === 'balance') {
+                            // 1. Tổng Lot bé nhất -> 2. Lời cao nhất
+                            if (a.totalLot !== b.totalLot) return a.totalLot - b.totalLot;
+                            return b.profit - a.profit;
+                        } 
+                        else if (mode === 'lotMin') {
+                            // 1. Hệ số Lot bé nhất -> 2. Lot đầu bé nhất -> 3. Lời cao nhất
+                            if (a.lotMultiplier !== b.lotMultiplier) return a.lotMultiplier - b.lotMultiplier;
+                            if (a.initialLot !== b.initialLot) return a.initialLot - b.initialLot;
+                            return b.profit - a.profit;
+                        }
+                        else if (mode === 'lenhMax') {
+                            // 1. Số lệnh Max nhiều nhất -> 2. Rủi ro Lot ít nhất
+                            if (a.maxOrders !== b.maxOrders) return b.maxOrders - a.maxOrders; // Giảm dần
+                            if (a.totalLot !== b.totalLot) return a.totalLot - b.totalLot;
+                            return b.profit - a.profit;
+                        }
+                        else if (mode === 'tpMin') {
+                            // 1. Quãng TP ngắn nhất -> 2. Tổng Lot bé nhất
+                            if (a.tpStep !== b.tpStep) return a.tpStep - b.tpStep; // Tăng dần
+                            if (a.totalLot !== b.totalLot) return a.totalLot - b.totalLot;
+                            return b.profit - a.profit;
+                        }
+                    });
+
+                    let bestConfig = validConfigs[0];
+
+                    // Điền tự động vào Input
+                    document.getElementById('initialLot').value = bestConfig.initialLot;
+                    document.getElementById('lotMultiplier').value = bestConfig.lotMultiplier;
+                    document.getElementById('maxOrders').value = bestConfig.maxOrders;
+                    document.getElementById('step1').value = bestConfig.step;
+                    document.getElementById('step2').value = bestConfig.step;
+                    document.getElementById('tpStep').value = bestConfig.tpStep;
+                    
+                    // Hiệu ứng Highlight
+                    ['initialLot', 'lotMultiplier', 'maxOrders', 'step1', 'step2', 'tpStep'].forEach(highlightElement);
+
+                    calculateDCA();
+
+                    let modeTitle = mode === 'balance' ? "Cân Bằng" : (mode === 'lotMin' ? "Lot Min" : (mode === 'lenhMax' ? "Lệnh Max" : "TP Min"));
+                    const statusBar = document.getElementById('statusBarMsg');
+                    statusBar.innerHTML = `✅ [${modeTitle}] Đã tìm thấy cấu hình tối ưu! (Vốn: <b>$${bestConfig.reqCap.toFixed(2)}</b>, Lời: <b>$${bestConfig.profit.toFixed(2)}</b>)`;
+                    statusBar.className = 'text-green-700 font-bold transition-colors duration-300';
+                    setTimeout(() => {
+                        statusBar.innerText = "Ready";
+                        statusBar.className = 'transition-colors duration-300';
+                    }, 5000);
+                } else {
+                    showCustomAlert("Không có bất kỳ cấu hình toán học nào giúp bạn an toàn với thông số này!<br><br><b>Vui lòng tăng vốn tối đa hoặc giảm biên độ chịu đựng!</b>");
+                }
+                
+                restoreButtons();
+            }, 100); 
+
+            function restoreButtons() {
+                btn.innerHTML = originalText;
+                allBtns.forEach(b => b.classList.remove('opacity-50', 'pointer-events-none'));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Khởi động đồng hồ thời gian thực và hiển thị ngày
+            startClock();
+            
+            calculateDCA();
+
+            const formInputs = document.querySelectorAll('.excel-input');
+            formInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if (!input.id.startsWith('opt')) calculateDCA();
+                });
+                input.addEventListener('focus', function() {
+                    if(this.type === 'number') this.select();
+                });
+            });
+
+            document.getElementById('btnReset').addEventListener('click', resetToDefaults);
+            
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'F9') {
+                    e.preventDefault();
+                    resetToDefaults();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
